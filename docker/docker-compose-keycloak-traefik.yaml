@@ -1,0 +1,37 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.2
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      RADIUS_SHARED_SECRET: secret
+      RADIUS_UDP: 'true'
+      RADIUS_UDP_AUTH_PORT: 1812
+      RADIUS_UDP_ACCOUNT_PORT: 1813
+      RADIUS_RADSEC: 'false'
+      RADIUS_DICTIONARY: ''
+      RADIUS_RADSEC_PRIVATEKEY: /config/private.key
+      RADIUS_RADSEC_CERTIFICATE: /config/public.crt
+      RADIUS_COA: 'false'
+      RADIUS_COA_PORT: 3799
+      "keycloak.profile.feature.upload_scripts": enabled
+      SERVICE_FQDN_KEYCLOAK: "localhost"
+      SERVICE_URL_KEYCLOAK: "https://localhost"
+      labels:
+      - traefik.enable=true
+      - 'traefik.http.routers.affine-https.rule=Host(`${SERVICE_FQDN_KEYCLOAK}`) && PathPrefix(`/`)'
+      - traefik.http.routers.affine-https.entryPoints=https
+      - traefik.http.routers.affine-https.middlewares=gzip
+      - traefik.http.routers.affine-https.service=affine-svc
+      - traefik.http.routers.affine-https.tls=true
+      - traefik.http.services.affine-svc.loadbalancer.server.port=8080
+      - 'traefik.http.routers.affine-http.rule=Host(`${SERVICE_FQDN_KEYCLOAK}`) && PathPrefix(`/`)'
+      - traefik.http.routers.affine-http.entryPoints=http
+      - traefik.http.routers.affine-http.middlewares=redirect-to-https
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    volumes:
+      - ./scripts:/opt/radius/scripts
+      - ./config:/config
+    entrypoint: sh /opt/radius/scripts/docker-entrypoint.sh start
