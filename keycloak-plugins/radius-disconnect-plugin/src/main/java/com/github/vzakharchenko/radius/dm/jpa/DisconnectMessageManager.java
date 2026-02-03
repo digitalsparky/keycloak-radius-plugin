@@ -26,6 +26,17 @@ public class DisconnectMessageManager implements DmTableManager {
 
     @Override
     public void saveRadiusSession(DisconnectMessageModel disconnectMessageModel) {
+        // Check if a session already exists with the same userName and radiusSessionId
+        // to prevent duplicate entity errors (issue #970)
+        DisconnectMessageModel existing = getDisconnectMessage(
+                disconnectMessageModel.getUserName(),
+                disconnectMessageModel.getRadiusSessionId());
+        if (existing != null) {
+            // Session already exists, update the modify date instead of creating a new one
+            existing.setModifyDate(new Date());
+            em.merge(existing);
+            return;
+        }
         disconnectMessageModel.setCreatedDate(new Date());
         disconnectMessageModel.setModifyDate(new Date());
         disconnectMessageModel.setId(UUID.randomUUID().toString());

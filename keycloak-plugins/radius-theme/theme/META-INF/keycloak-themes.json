@@ -1,6 +1,3 @@
 {
-  "themes": [{
-    "name" : "radius",
-    "types": ["admin"]
-  }]
+  "themes": []
 }

@@ -30,6 +30,7 @@ public class AbstractJPATest extends AbstractRadiusTest {
         reset(typedQuery);
         when(provider.getEntityManager()).thenReturn(entityManager);
         when(entityManager.createQuery(anyString(), any())).thenReturn(typedQuery);
+        when(typedQuery.setParameter(anyString(), any())).thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(Collections.emptyList());
     }
 }

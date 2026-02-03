@@ -26,8 +26,32 @@ public class DisconnectMessageManagerTest extends AbstractJPATest {
     @Test
     public void saveTest() {
         DisconnectMessageModel disconnectMessageModel = new DisconnectMessageModel();
+        disconnectMessageModel.setUserName("testUser");
+        disconnectMessageModel.setRadiusSessionId("testSessionId");
         disconnectMessageManager.saveRadiusSession(disconnectMessageModel);
         verify(entityManager).persist(any());
+        verify(entityManager, never()).merge(any());
+    }
+
+    @Test
+    public void saveTestExistingSession() {
+        // Test for issue #970: when session already exists, merge instead of persist
+        DisconnectMessageModel existingModel = new DisconnectMessageModel();
+        existingModel.setUserName("testUser");
+        existingModel.setRadiusSessionId("testSessionId");
+        existingModel.setId("existing-id");
+        when(typedQuery.getResultList()).thenReturn(Arrays.asList(existingModel));
+
+        DisconnectMessageModel newModel = new DisconnectMessageModel();
+        newModel.setUserName("testUser");
+        newModel.setRadiusSessionId("testSessionId");
+
+        disconnectMessageManager.saveRadiusSession(newModel);
+
+        // Should merge existing session instead of persisting new one
+        verify(entityManager).merge(existingModel);
+        verify(entityManager, never()).persist(any());
+        assertNotNull(existingModel.getModifyDate());
     }
 
     @Test

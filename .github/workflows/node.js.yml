@@ -4,6 +4,7 @@
 name: Node.js Examples
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'feature/**'
