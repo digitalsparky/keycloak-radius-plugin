@@ -19,5 +19,18 @@ fi
 
 configJSON="{\"sharedSecret\":\"$RADIUS_SHARED_SECRET\",\"authPort\":$RADIUS_UDP_AUTH_PORT,\"accountPort\":$RADIUS_UDP_ACCOUNT_PORT,\"useUdpRadius\":$RADIUS_UDP,\"externalDictionary\":\"$RADIUS_DICTIONARY\",\"radsec\":{\"privateKey\":\"$RADIUS_RADSEC_PRIVATEKEY\",\"certificate\":\"$RADIUS_RADSEC_CERTIFICATE\",\"useRadSec\":$RADIUS_RADSEC},\"coa\":{\"port\":$RADIUS_COA_PORT,\"useCoA\":$RADIUS_COA}}"
 echo "$configJSON"
-mkdir -v -p /opt/keycloak/config/
-echo "$configJSON">/opt/keycloak/config/radius.config
+
+# Determine config path: use RADIUS_CONFIG_PATH if set, otherwise use KEYCLOAK_PATH/config,
+# otherwise use /opt/keycloak/config as default for Docker (issue #866)
+if [ -n "$RADIUS_CONFIG_PATH" ]; then
+  CONFIG_DIR="$RADIUS_CONFIG_PATH"
+elif [ -n "$KEYCLOAK_PATH" ]; then
+  CONFIG_DIR="$KEYCLOAK_PATH/config"
+else
+  CONFIG_DIR="/opt/keycloak/config"
+  # Export KEYCLOAK_PATH so the Java code finds the config in the same location
+  export KEYCLOAK_PATH="/opt/keycloak"
+fi
+
+mkdir -v -p "$CONFIG_DIR"
+echo "$configJSON">"$CONFIG_DIR/radius.config"
